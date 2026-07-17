@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "api/webhook.py": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    { "source": "/api/webhook", "destination": "/api/webhook.py" }
+  ]
+}
