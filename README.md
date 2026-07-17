@@ -6,10 +6,13 @@ Vercel (funciones serverless en modo webhook).
 
 ## Comandos
 
-- `/nueva` — empieza una cotización nueva.
-- Contás el cliente (texto o audio).
-- Vas contando los ítems (producto, cantidad, precio), de a uno o todos juntos.
-- `/listo` — cierra la carga de ítems y muestra el resumen con botones para confirmar o cancelar.
+- Le contás al bot, en un solo mensaje o en varios (texto o audio), quién es el cliente y qué ítems
+  (producto, cantidad, precio) querés cotizar. No hace falta ningún comando para arrancar.
+- El bot va completando la cotización y pregunta puntualmente por lo que falte (nombre del cliente,
+  precio de algún ítem, etc.). Podés seguir agregando o corrigiendo ítems en cualquier momento.
+- Cuando está todo completo, muestra el resumen con botones para confirmar o cancelar. Si en vez de
+  tocar un botón mandás otro mensaje, se toma como una corrección y se actualiza el resumen.
+- `/nueva` — descarta la cotización en curso y arranca una nueva.
 - `/cancelar` — cancela la cotización en curso.
 - `/historial` — muestra las últimas cotizaciones y permite volver a descargar el PDF de cualquiera.
 

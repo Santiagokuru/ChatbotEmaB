@@ -2,8 +2,7 @@ from bot.db import get_client
 from bot.models import QuoteData
 
 IDLE = "idle"
-AWAITING_CLIENT = "awaiting_client"
-AWAITING_ITEMS = "awaiting_items"
+COLLECTING = "collecting"
 CONFIRMING = "confirming"
 
 
