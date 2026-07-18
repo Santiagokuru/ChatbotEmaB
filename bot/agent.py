@@ -10,20 +10,22 @@ _MAX_TOOL_ROUNDS = 4
 
 _SYSTEM_INSTRUCTION = (
     "Sos el asistente de un negocio que arma cotizaciones por Telegram. "
-    "El usuario te va a describir, en uno o varios mensajes, quién es el cliente y qué ítems "
-    "(productos o servicios) quiere cotizar, con su cantidad y precio unitario.\n\n"
+    "El usuario te va a describir, en uno o varios mensajes, quién es el cliente, qué ítems "
+    "(productos o servicios) quiere cotizar (con su cantidad y precio unitario), y el tiempo estimado "
+    "de realización del trabajo (ej. \"1 día\", \"2 días aprox\").\n\n"
     "Reflejá cada dato nuevo o cada corrección usando las herramientas disponibles "
-    "(set_client, add_item, update_item, remove_item) — nunca respondas los datos solo en texto, "
-    "siempre aplicalos con la herramienta correspondiente.\n\n"
+    "(set_client, add_item, update_item, remove_item, set_estimated_time) — nunca respondas los datos solo "
+    "en texto, siempre aplicalos con la herramienta correspondiente.\n\n"
     "Los ítems ya cargados se te muestran con su índice de posición (empezando en 0); usá ese índice "
     "para update_item y remove_item cuando el usuario corrija o borre uno.\n\n"
     "Después de aplicar los cambios, respondé en texto natural y breve:\n"
-    "- Si todavía falta el nombre del cliente o el precio de algún ítem, pedí puntualmente eso que falta.\n"
-    "- Si ya está todo completo (cliente con nombre, todos los ítems con precio), decilo para que el usuario "
-    "sepa que puede confirmar.\n"
+    "- Si todavía falta el nombre del cliente, el precio de algún ítem, o el tiempo estimado de "
+    "realización, pedí puntualmente eso que falta.\n"
+    "- Si ya está todo completo (cliente con nombre, todos los ítems con precio, tiempo estimado cargado), "
+    "decilo para que el usuario sepa que puede confirmar.\n"
     "- Si el mensaje del usuario no tiene nada que ver con armar una cotización (un saludo, una pregunta "
     "general), no llames ninguna herramienta y respondé brevemente explicando que podés armar una cotización "
-    "si te cuenta el cliente y los ítems."
+    "si te cuenta el cliente, los ítems y el tiempo estimado."
 )
 
 _TOOLS = types.Tool(
@@ -91,6 +93,19 @@ _TOOLS = types.Tool(
                 required=["index"],
             ),
         ),
+        types.FunctionDeclaration(
+            name="set_estimated_time",
+            description="Establece el tiempo estimado de realización del trabajo (ej. '1 día', '2 días aprox').",
+            parameters=types.Schema(
+                type="OBJECT",
+                properties={
+                    "estimated_time": types.Schema(
+                        type="STRING", description="Tiempo estimado de realización, tal como lo dijo el usuario."
+                    ),
+                },
+                required=["estimated_time"],
+            ),
+        ),
     ]
 )
 
@@ -145,13 +160,20 @@ def _apply_tool_call(data: QuoteData, name: str, args: dict) -> str | None:
             data.items.pop(index)
             return None
 
+        if name == "set_estimated_time":
+            estimated_time = args.get("estimated_time")
+            if not estimated_time:
+                return "set_estimated_time requiere 'estimated_time'"
+            data.estimated_time = estimated_time
+            return None
+
         return f"herramienta desconocida: {name}"
     except (KeyError, TypeError, ValueError) as exc:
         return f"argumentos inválidos para {name}: {exc}"
 
 
 def _state_context(data: QuoteData) -> str:
-    if data.client is None and not data.items:
+    if data.client is None and not data.items and not data.estimated_time:
         return "Estado actual: todavía no hay ningún dato cargado."
 
     lines = ["Estado actual de la cotización:"]
@@ -167,6 +189,8 @@ def _state_context(data: QuoteData) -> str:
             lines.append(f"  [{i}] {item.quantity:g} x {item.name} — precio unitario: {price}")
     else:
         lines.append("- Ítems: (todavía no hay ninguno)")
+
+    lines.append(f"- Tiempo estimado de realización: {data.estimated_time or '(todavía no cargado)'}")
 
     return "\n".join(lines)
 

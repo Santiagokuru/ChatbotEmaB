@@ -13,15 +13,24 @@ def get_client() -> Client:
     return _client
 
 
-def save_quote(chat_id: int, client: ClientInfo, items: list[Item], total: float) -> None:
-    get_client().table("quotes").insert(
-        {
-            "chat_id": chat_id,
-            "client": client.model_dump(),
-            "items": [item.model_dump() for item in items],
-            "total": total,
-        }
-    ).execute()
+def save_quote(
+    chat_id: int, client: ClientInfo, items: list[Item], total: float, estimated_time: str
+) -> int:
+    resp = (
+        get_client()
+        .table("quotes")
+        .insert(
+            {
+                "chat_id": chat_id,
+                "client": client.model_dump(),
+                "items": [item.model_dump() for item in items],
+                "total": total,
+                "estimated_time": estimated_time,
+            }
+        )
+        .execute()
+    )
+    return resp.data[0]["quote_number"]
 
 
 def list_quotes(chat_id: int, limit: int = HISTORY_PAGE_SIZE) -> list[dict]:
