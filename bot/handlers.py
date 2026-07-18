@@ -16,8 +16,11 @@ def _incoming_content(message: dict) -> tuple[str | None, bytes | None, str]:
 
 
 def _is_complete(data: QuoteData) -> bool:
-    return bool(data.client and data.client.name) and bool(data.items) and all(
-        i.unit_price > 0 for i in data.items
+    return (
+        bool(data.client and data.client.name)
+        and bool(data.items)
+        and all(i.unit_price > 0 for i in data.items)
+        and bool(data.estimated_time)
     )
 
 
@@ -106,11 +109,13 @@ def _confirm_quote(chat_id: int) -> None:
         tg.send_message(chat_id, "No hay una cotización pendiente de confirmar.")
         return
 
-    pdf_bytes = build_quote_pdf(BUSINESS, data.client, data.items, data.total)
+    quote_number = db.save_quote(chat_id, data.client, data.items, data.total, data.estimated_time)
+    pdf_bytes = build_quote_pdf(
+        BUSINESS, data.client, data.items, data.total, quote_number, data.estimated_time
+    )
     filename = f"cotizacion_{data.client.name.replace(' ', '_')}.pdf"
     tg.send_document(chat_id, filename, pdf_bytes, caption=f"Cotización para {data.client.name}")
 
-    db.save_quote(chat_id, data.client, data.items, data.total)
     state.clear_session(chat_id)
 
 
@@ -135,6 +140,8 @@ def _resend_quote(chat_id: int, quote_id: str) -> None:
 
     client = QuoteData.model_validate({"client": quote["client"], "items": quote["items"]}).client
     items = [Item.model_validate(i) for i in quote["items"]]
-    pdf_bytes = build_quote_pdf(BUSINESS, client, items, quote["total"])
+    pdf_bytes = build_quote_pdf(
+        BUSINESS, client, items, quote["total"], quote["quote_number"], quote.get("estimated_time") or ""
+    )
     filename = f"cotizacion_{client.name.replace(' ', '_')}.pdf"
     tg.send_document(chat_id, filename, pdf_bytes, caption=f"Cotización para {client.name}")

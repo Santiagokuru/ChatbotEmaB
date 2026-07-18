@@ -23,6 +23,7 @@ class ItemList(BaseModel):
 class QuoteData(BaseModel):
     client: ClientInfo | None = None
     items: list[Item] = Field(default_factory=list)
+    estimated_time: str = ""
 
     @property
     def total(self) -> float:

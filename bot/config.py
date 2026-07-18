@@ -22,6 +22,12 @@ BUSINESS = {
     "phone": os.environ.get("BUSINESS_PHONE", ""),
     "email": os.environ.get("BUSINESS_EMAIL", ""),
     "address": os.environ.get("BUSINESS_ADDRESS", ""),
+    "bank_account": os.environ.get("BUSINESS_BANK_ACCOUNT", ""),
+    "bank_alias": os.environ.get("BUSINESS_ALIAS", ""),
+    "signature": os.environ.get("BUSINESS_SIGNATURE", ""),
+    "logo_path": os.environ.get("BUSINESS_LOGO_PATH", "src/assets/img/logo encabezado.png"),
+    "validity_days": int(os.environ.get("BUSINESS_VALIDITY_DAYS", "15")),
+    "quote_prefix": os.environ.get("BUSINESS_QUOTE_PREFIX", "002"),
 }
 
 HISTORY_PAGE_SIZE = 10
